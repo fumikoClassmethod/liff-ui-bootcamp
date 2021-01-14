@@ -1,25 +1,49 @@
+import React, { useEffect, useState } from "react";
+
 import logo from './logo.svg';
 import './App.css';
 
+const { liff } = window;
+
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          はろーわぁるど！
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [signInFinished, setSignInFinished] = useState(false);
+  const [signInFailed, setSignInFailed] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+
+  useEffect(() => {
+    liff
+      .init({
+        liffId: process.env.REACT_APP_LIFF_ID,
+      })
+      .then(async () => {
+        // ログインしてるかチェック
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        }
+        const profile = await liff.getProfile();
+        setDisplayName(profile.displayName);
+        setSignInFinished(true);
+      })
+      .catch((error) => {
+        setSignInFailed(true);
+        setSignInFinished(true);
+      });
+  }, []);
+
+  if (!signInFinished) {
+    return <div>Loading</div>;
+  } else if (signInFailed) {
+    return <div>ログイン失敗</div>;
+  } else {
+    return (
+      <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>Name: {displayName}</p>
+        </header>
+      </div>
+    );
+  }
 }
 
 export default App;
